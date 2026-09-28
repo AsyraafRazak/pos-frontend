@@ -1,0 +1,114 @@
+/* ============================================================
+   Modifier Modal
+   ============================================================ */
+
+.modifier-modal { max-width: 460px; }
+
+.modifier-modal__base-price {
+  font-size: 13px;
+  color: #4f46e5;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* --- Modifier Group --- */
+.modifier-group { margin-bottom: 20px; }
+
+.modifier-group__label {
+  font-size: 11px;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+
+.modifier-group__hint {
+  font-weight: 400;
+  text-transform: none;
+  color: #94a3b8;
+  font-size: 11px;
+  letter-spacing: 0;
+}
+
+.modifier-group__options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+/* --- Modifier Option Chip --- */
+.modifier-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  font-size: 13px;
+  font-weight: 500;
+  color: #475569;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+  font-family: inherit;
+}
+
+.modifier-option:hover {
+  border-color: #a5b4fc;
+  background: #f0f0ff;
+}
+
+.modifier-option--selected {
+  border-color: #4f46e5;
+  background: #eef2ff;
+  color: #4f46e5;
+  font-weight: 600;
+}
+
+.modifier-option__price {
+  font-size: 11px;
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+.modifier-option--selected .modifier-option__price { color: #4f46e5; }
+
+/* --- Note field --- */
+.modifier-modal__note { margin-top: 4px; }
+
+/* --- Footer Quantity Stepper --- */
+.modifier-modal__qty {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.modifier-modal__qty-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: 1.5px solid #e2e8f0;
+  background: #f8fafc;
+  color: #475569;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color 0.15s, background-color 0.15s, color 0.15s;
+}
+
+.modifier-modal__qty-btn:hover {
+  border-color: #4f46e5;
+  background: #eef2ff;
+  color: #4f46e5;
+}
+
+.modifier-modal__qty-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+  min-width: 24px;
+  text-align: center;
+}

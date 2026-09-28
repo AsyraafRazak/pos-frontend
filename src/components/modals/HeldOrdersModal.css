@@ -1,0 +1,81 @@
+/* ============================================================
+   Held Orders Modal
+   ============================================================ */
+
+.held-modal { max-width: 440px; }
+
+.held-modal__count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fef3c7;
+  color: #d97706;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 8px;
+}
+
+.held-modal__empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 32px 16px;
+  color: #94a3b8;
+  font-size: 13px;
+}
+
+/* --- Held Order List --- */
+.held-modal__list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.held-order-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  transition: border-color 0.15s;
+}
+
+.held-order-card:hover { border-color: #a5b4fc; }
+
+.held-order-card__info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.held-order-card__name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.held-order-card__meta {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.held-order-card__time {
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.held-order-card__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
