@@ -17,6 +17,20 @@ export interface Category {
   icon?: string
 }
 
+export interface CartItemModifier {
+  id: string
+  name: string
+  price: number
+}
+
+export interface ModifierGroup {
+  id: string
+  name: string
+  multiSelect?: boolean
+  required?: boolean
+  options: CartItemModifier[]
+}
+
 export interface CartItem {
   id: string
   productId: string
@@ -26,12 +40,6 @@ export interface CartItem {
   modifiers?: CartItemModifier[]
   note?: string
   lineTotal: number
-}
-
-export interface CartItemModifier {
-  id: string
-  name: string
-  price: number
 }
 
 export interface Discount {
@@ -57,7 +65,7 @@ export interface HeldOrder {
   createdAt: Date
 }
 
-export type PaymentMethod = 'cash' | 'card' | 'ewallet' | 'qr'
+export type PaymentMethod = 'cash' | 'card' | 'ewallet'
 
 export interface PaymentTender {
   method: PaymentMethod
@@ -75,3 +83,20 @@ export interface CashierSession {
 }
 
 export type ConnectionStatus = 'online' | 'edge-only' | 'offline'
+
+export interface CompletedOrder {
+  id: string
+  orderNumber: string
+  cashierName: string
+  terminalId: string
+  items: CartItem[]
+  subtotal: number
+  discountAmount: number
+  tax: number
+  total: number
+  paymentMethod: PaymentMethod
+  paymentLabel: string
+  amountTendered: number
+  change: number
+  completedAt: Date
+}
