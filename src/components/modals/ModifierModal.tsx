@@ -46,6 +46,7 @@ export function ModifierModal() {
   const lineTotal = unitTotal * quantity
 
   function handleAddToCart() {
+    if (!product) return
     addItem({
       id: generateCartItemId(),
       productId: product.id,
