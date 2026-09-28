@@ -6,10 +6,17 @@ interface SearchBarProps {
   value: string
   onChange: (value: string) => void
   onBarcode: (barcode: string) => void
+  onSubmit?: () => void
 }
 
-export function SearchBar({ value, onChange, onBarcode }: SearchBarProps) {
+export function SearchBar({ value, onChange, onBarcode, onSubmit }: SearchBarProps) {
   useBarcodeScanner(onBarcode)
+
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key === 'Enter' && onSubmit) {
+      onSubmit()
+    }
+  }
 
   return (
     <div className="searchbar">
@@ -20,6 +27,7 @@ export function SearchBar({ value, onChange, onBarcode }: SearchBarProps) {
         placeholder="Search products or scan barcode..."
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
       />
       {value ? (
         <button className="searchbar__clear no-select" onClick={() => onChange('')} aria-label="Clear search">

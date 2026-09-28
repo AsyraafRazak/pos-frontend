@@ -15,10 +15,13 @@ export function CatalogPanel() {
   const addItem = useCartStore((s) => s.addItem)
   const openModal = useUIStore((s) => s.openModal)
 
+  const query = searchQuery.trim().toLowerCase()
   const filteredProducts = MOCK_PRODUCTS.filter((p) => {
     const matchesCategory = activeCategory === 'all' || p.category === activeCategory
     const matchesSearch =
-      !searchQuery || p.name.toLowerCase().includes(searchQuery.toLowerCase())
+      !query ||
+      p.name.toLowerCase().includes(query) ||
+      (p.barcode && p.barcode.toLowerCase().includes(query))
     return matchesCategory && matchesSearch
   })
 
@@ -47,11 +50,30 @@ export function CatalogPanel() {
     [handleProductClick],
   )
 
+  const handleSearchSubmit = useCallback(() => {
+    if (filteredProducts.length === 1) {
+      handleProductClick(filteredProducts[0])
+      setSearchQuery('')
+    } else if (query) {
+      // Check if there is an exact barcode match
+      const exactBarcode = MOCK_PRODUCTS.find((p) => p.barcode === query)
+      if (exactBarcode) {
+        handleProductClick(exactBarcode)
+        setSearchQuery('')
+      }
+    }
+  }, [filteredProducts, handleProductClick, query])
+
   return (
     <div className="catalog">
       {/* Toolbar: Search + Category Tabs */}
       <div className="catalog__toolbar">
-        <SearchBar value={searchQuery} onChange={setSearchQuery} onBarcode={handleBarcode} />
+        <SearchBar
+          value={searchQuery}
+          onChange={setSearchQuery}
+          onBarcode={handleBarcode}
+          onSubmit={handleSearchSubmit}
+        />
         <div className="catalog__tabs">
           {CATEGORIES.map((cat) => (
             <button
