@@ -140,14 +140,14 @@ export function PaymentModal() {
               <div className="payment-modal__amount-col">
                 <span className="payment-modal__amount-label">Tendered</span>
                 <span className="payment-modal__amount-value">
-                  ₱ {tendered.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  RM {tendered.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </span>
               </div>
               {tendered >= total && (
                 <div className="payment-modal__amount-col">
                   <span className="payment-modal__amount-label">Change</span>
                   <span className="payment-modal__change-value">
-                    ₱ {change.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    RM {change.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </span>
                 </div>
               )}
