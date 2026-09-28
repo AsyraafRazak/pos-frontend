@@ -23,7 +23,7 @@ export function ProductCard({ product, onClick }: ProductCardProps) {
       )}
 
       <span className="product-card__name truncate">{product.name}</span>
-      <span className="product-card__price">₱{product.price.toFixed(2)}</span>
+      <span className="product-card__price">RM{product.price.toFixed(2)}</span>
     </button>
   )
 }
