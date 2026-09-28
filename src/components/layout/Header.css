@@ -1,0 +1,163 @@
+/* ============================================================
+   Header
+   ============================================================ */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 56px;
+  padding: 0 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  flex-shrink: 0;
+}
+
+/* --- Brand --- */
+.header__brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header__logo {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background-color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.header__brand-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header__brand-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.header__terminal-id {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+/* --- Status Badge --- */
+.status-badge {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.status-badge--online {
+  background-color: #ecfdf5;
+  color: #059669;
+}
+
+.status-badge--edge-only {
+  background-color: #fffbeb;
+  color: #d97706;
+}
+
+.status-badge--offline {
+  background-color: #fef2f2;
+  color: #dc2626;
+}
+
+/* --- Clock --- */
+.header__clock {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #64748b;
+}
+
+.header__clock-icon {
+  color: #94a3b8;
+}
+
+.header__clock-time {
+  font-size: 13px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: #1e293b;
+}
+
+.header__clock-date {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1;
+  margin-top: 2px;
+}
+
+/* --- Cashier --- */
+.header__cashier {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header__cashier-info {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.header__cashier-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: #1e293b;
+  line-height: 1;
+}
+
+.header__cashier-shift {
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1;
+}
+
+.header__cashier-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px;
+  border-radius: 8px;
+  transition: background-color 0.15s;
+}
+
+.header__cashier-btn:hover {
+  background-color: #f1f5f9;
+}
+
+.header__avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background-color: #e0e7ff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #4f46e5;
+}
+
+.header__chevron {
+  color: #94a3b8;
+}

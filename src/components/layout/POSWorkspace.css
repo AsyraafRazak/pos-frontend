@@ -1,0 +1,29 @@
+/* ============================================================
+   POS Workspace — 2-column layout
+   ============================================================ */
+
+.pos-workspace {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* Left: catalog */
+.pos-workspace__catalog {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+  background-color: #f1f5f9;
+}
+
+/* Right: cart */
+.pos-workspace__cart {
+  display: flex;
+  flex-direction: column;
+  width: 340px;
+  flex-shrink: 0;
+  background-color: #ffffff;
+  border-left: 1px solid #e2e8f0;
+  overflow: hidden;
+}
