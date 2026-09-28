@@ -1,6 +1,6 @@
 /** Format a number as currency */
-export function formatCurrency(amount: number, currency = 'PHP'): string {
-  return new Intl.NumberFormat('en-PH', {
+export function formatCurrency(amount: number, currency = 'MYR'): string {
+  return new Intl.NumberFormat('en-MY', {
     style: 'currency',
     currency,
     minimumFractionDigits: 2,

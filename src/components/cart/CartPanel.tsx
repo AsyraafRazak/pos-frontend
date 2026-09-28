@@ -36,7 +36,7 @@ export function CartPanel() {
     applyDiscount({
       type: discountType,
       value,
-      label: discountType === 'percentage' ? `${value}% off` : `₱${value} off`,
+      label: discountType === 'percentage' ? `${value}% off` : `RM${value} off`,
     })
     setDiscountOpen(false)
     setDiscountInput('')
@@ -117,7 +117,7 @@ export function CartPanel() {
                   className={`cart__discount-type-btn ${discountType === 'fixed' ? 'active' : ''}`}
                   onClick={() => setDiscountType('fixed')}
                 >
-                  ₱
+                  RM
                 </button>
               </div>
               <input
