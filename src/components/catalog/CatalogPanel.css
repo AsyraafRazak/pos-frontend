@@ -1,0 +1,111 @@
+/* ============================================================
+   Catalog Panel
+   ============================================================ */
+
+.catalog {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* --- Category Tabs --- */
+.catalog__tabs {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #ffffff;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex-shrink: 0;
+}
+
+.catalog__tabs::-webkit-scrollbar {
+  display: none;
+}
+
+.catalog__tab {
+  padding: 6px 16px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  white-space: nowrap;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.catalog__tab--active {
+  background-color: #4f46e5;
+  color: #ffffff;
+}
+
+.catalog__tab--inactive {
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+.catalog__tab--inactive:hover {
+  background-color: #e2e8f0;
+}
+
+/* --- Product Grid --- */
+.catalog__grid {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 12px;
+  align-content: start;
+}
+
+/* --- Product Card --- */
+.product-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  cursor: pointer;
+  text-align: center;
+}
+
+.product-card:hover {
+  border-color: #a5b4fc;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+}
+
+.product-card:active {
+  transform: scale(0.96);
+}
+
+.product-card__icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  background-color: #f1f5f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #94a3b8;
+}
+
+.product-card__name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.product-card__price {
+  font-size: 12px;
+  font-weight: 700;
+  color: #4f46e5;
+}
