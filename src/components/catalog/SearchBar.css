@@ -1,0 +1,64 @@
+/* ============================================================
+   Search Bar
+   ============================================================ */
+
+.searchbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 12px;
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;
+}
+
+.searchbar:focus-within {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+  background: #ffffff;
+}
+
+.searchbar__icon {
+  color: #94a3b8;
+  flex-shrink: 0;
+}
+
+.searchbar__input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  color: #1e293b;
+  outline: none;
+  font-family: inherit;
+}
+
+.searchbar__input::placeholder {
+  color: #94a3b8;
+}
+
+.searchbar__clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: #64748b;
+  cursor: pointer;
+  border: none;
+  transition: background-color 0.1s;
+  flex-shrink: 0;
+}
+
+.searchbar__clear:hover {
+  background: #cbd5e1;
+  color: #1e293b;
+}
+
+.searchbar__scan-icon {
+  color: #cbd5e1;
+  flex-shrink: 0;
+}
