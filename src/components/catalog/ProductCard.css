@@ -1,0 +1,71 @@
+/* ============================================================
+   Product Card
+   ============================================================ */
+
+.product-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 10px 12px;
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, box-shadow 0.15s, transform 0.1s;
+  width: 100%;
+}
+
+.product-card:hover {
+  border-color: #a5b4fc;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.12);
+}
+
+.product-card:active {
+  transform: scale(0.94);
+  border-color: #4f46e5;
+}
+
+/* Product image placeholder */
+.product-card__image {
+  width: 52px;
+  height: 52px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #f0f0ff 0%, #e8e8fe 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a5b4fc;
+  flex-shrink: 0;
+}
+
+/* "Options" badge for modifier products */
+.product-card__options-badge {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: #7c3aed;
+  background: #ede9fe;
+  padding: 2px 5px;
+  border-radius: 4px;
+  line-height: 1.4;
+}
+
+.product-card__name {
+  font-size: 12px;
+  font-weight: 600;
+  color: #334155;
+  width: 100%;
+}
+
+.product-card__price {
+  font-size: 13px;
+  font-weight: 700;
+  color: #4f46e5;
+}
