@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { X, Minus, Plus } from 'lucide-react'
 import { useUIStore } from '@/stores/useUIStore'
 import { useCartStore } from '@/stores/useCartStore'
-import { PRODUCT_MODIFIERS } from '@/data/mockData'
 import { generateCartItemId, formatCurrency } from '@/lib/utils'
 import type { CartItemModifier } from '@/types/pos.types'
 import './ModifierModal.css'
@@ -19,7 +18,8 @@ export function ModifierModal() {
 
   if (!product) return null
 
-  const modifierGroups = PRODUCT_MODIFIERS[product.id] ?? []
+  // Use modifier groups from the API-populated product; fall back to empty array
+  const modifierGroups = product.modifierGroups ?? []
 
   function toggleOption(groupId: string, option: CartItemModifier, multiSelect: boolean) {
     setSelectedOptions((prev) => {
