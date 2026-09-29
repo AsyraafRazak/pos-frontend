@@ -4,7 +4,7 @@ import { useShallow } from 'zustand/react/shallow'
 import { useUIStore } from '@/stores/useUIStore'
 import { useCartStore } from '@/stores/useCartStore'
 import { useSessionStore } from '@/stores/useSessionStore'
-import { submitOrder } from '@/lib/api'
+import { syncManager } from '@/lib/syncManager'
 import { adaptCartItemToRequest, adaptPaymentToRequest } from '@/lib/adapters'
 import { formatCurrency } from '@/lib/utils'
 import type { PaymentMethod, CompletedOrder } from '@/types/pos.types'
@@ -72,10 +72,11 @@ export function PaymentModal() {
 
     const amountTendered = method === 'cash' ? tendered : total
     const changeGiven = method === 'cash' ? change : 0
+    const clientId = crypto.randomUUID()
 
     // 1. Show receipt immediately (optimistic UX — cashier flow never blocks)
     const completed: CompletedOrder = {
-      id: crypto.randomUUID(),
+      id: clientId,
       orderNumber: orderNumRef.current,
       cashierName: session?.cashierName ?? 'Unknown',
       terminalId: session?.terminalId ?? 'POS-01',
@@ -94,10 +95,10 @@ export function PaymentModal() {
     clearCart()
     openModal('receipt')
 
-    // 2. Persist to backend in the background
-    submitOrder({
+    // 2. Enqueue to IndexedDB outbox — syncs to backend when online (Phase 2)
+    const orderPayload = {
       orderNumber: orderNumRef.current,
-      type: 'Takeaway',
+      type: 'Takeaway' as const,
       subtotal,
       discountTotal: discountAmount,
       taxTotal: tax,
@@ -107,12 +108,15 @@ export function PaymentModal() {
       shiftId: session?.shiftId,
       items: items.map(adaptCartItemToRequest),
       payments: [adaptPaymentToRequest(method, total, amountTendered, changeGiven)],
-    }).catch((err: unknown) => {
-      // Non-blocking: log to console; in production you could queue for retry
-      console.error('[POS] Failed to persist order to backend:', err)
-    }).finally(() => {
-      setSubmitting(false)
-    })
+    }
+
+    syncManager.enqueueOrder(clientId, orderNumRef.current, orderPayload)
+      .catch((err: unknown) => {
+        console.error('[POS] Failed to enqueue order:', err)
+      })
+      .finally(() => {
+        setSubmitting(false)
+      })
   }
 
   const isCash = method === 'cash'
