@@ -10,4 +10,13 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  server: {
+    proxy: {
+      // Forward /api/... → http://localhost:5009/api/... during dev
+      '/api': {
+        target: 'http://localhost:5009',
+        changeOrigin: true,
+      },
+    },
+  },
 })
