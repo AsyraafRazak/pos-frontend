@@ -4,6 +4,8 @@ import { useShallow } from 'zustand/react/shallow'
 import { useUIStore } from '@/stores/useUIStore'
 import { useCartStore } from '@/stores/useCartStore'
 import { useSessionStore } from '@/stores/useSessionStore'
+import { submitOrder } from '@/lib/api'
+import { adaptCartItemToRequest, adaptPaymentToRequest } from '@/lib/adapters'
 import { formatCurrency } from '@/lib/utils'
 import type { PaymentMethod, CompletedOrder } from '@/types/pos.types'
 import './PaymentModal.css'
@@ -39,12 +41,13 @@ export function PaymentModal() {
 
   const [method, setMethod] = useState<PaymentMethod>('cash')
   const [tenderStr, setTenderStr] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   // Stable order number for this payment session
   const orderNumRef = useRef(`ORD-${Date.now().toString().slice(-6)}`)
 
   const tendered = parseFloat(tenderStr || '0')
   const change = Math.max(0, tendered - total)
-  const canComplete = method !== 'cash' || tendered >= total
+  const canComplete = !submitting && (method !== 'cash' || tendered >= total)
 
   function handleNumpad(key: string) {
     if (key === '⌫') {
@@ -64,7 +67,13 @@ export function PaymentModal() {
     }
   }
 
-  function handleComplete() {
+  async function handleComplete() {
+    setSubmitting(true)
+
+    const amountTendered = method === 'cash' ? tendered : total
+    const changeGiven = method === 'cash' ? change : 0
+
+    // 1. Show receipt immediately (optimistic UX — cashier flow never blocks)
     const completed: CompletedOrder = {
       id: crypto.randomUUID(),
       orderNumber: orderNumRef.current,
@@ -77,13 +86,33 @@ export function PaymentModal() {
       total,
       paymentMethod: method,
       paymentLabel: METHODS.find((m) => m.id === method)?.label ?? method,
-      amountTendered: method === 'cash' ? tendered : total,
-      change: method === 'cash' ? change : 0,
+      amountTendered,
+      change: changeGiven,
       completedAt: new Date(),
     }
     setCompletedOrder(completed)
     clearCart()
     openModal('receipt')
+
+    // 2. Persist to backend in the background
+    submitOrder({
+      orderNumber: orderNumRef.current,
+      type: 'Takeaway',
+      subtotal,
+      discountTotal: discountAmount,
+      taxTotal: tax,
+      grandTotal: total,
+      cashierId: session?.id ?? 'cashier-1',
+      cashierName: session?.cashierName ?? 'Cashier',
+      shiftId: session?.shiftId,
+      items: items.map(adaptCartItemToRequest),
+      payments: [adaptPaymentToRequest(method, total, amountTendered, changeGiven)],
+    }).catch((err: unknown) => {
+      // Non-blocking: log to console; in production you could queue for retry
+      console.error('[POS] Failed to persist order to backend:', err)
+    }).finally(() => {
+      setSubmitting(false)
+    })
   }
 
   const isCash = method === 'cash'
@@ -208,7 +237,7 @@ export function PaymentModal() {
             disabled={!canComplete}
             onClick={handleComplete}
           >
-            Complete Sale · {formatCurrency(total)}
+            {submitting ? 'Saving…' : `Complete Sale · ${formatCurrency(total)}`}
           </button>
         </div>
       </div>
