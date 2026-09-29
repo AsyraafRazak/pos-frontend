@@ -85,3 +85,21 @@ export function closeShift(shiftId: number, payload: CloseShiftRequest): Promise
 export function fetchShift(shiftId: number): Promise<ShiftResponseDto> {
   return request<ShiftResponseDto>(`/shifts/${shiftId}`)
 }
+
+// ─── Health / Ping ────────────────────────────────────────────────────────────
+
+export async function pingApi(timeoutMs = 3000): Promise<boolean> {
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    const res = await fetch(`${BASE}/categories?activeOnly=true`, {
+      method: 'GET',
+      headers: { 'Content-Type': 'application/json' },
+      signal: controller.signal,
+    })
+    clearTimeout(timer)
+    return res.ok
+  } catch {
+    return false
+  }
+}

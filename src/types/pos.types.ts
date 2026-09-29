@@ -86,7 +86,7 @@ export interface CashierSession {
   shiftId?: number
 }
 
-export type ConnectionStatus = 'online' | 'edge-only' | 'offline'
+export type ConnectionStatus = 'online' | 'edge-only' | 'offline' | 'syncing'
 
 export interface CompletedOrder {
   id: string
