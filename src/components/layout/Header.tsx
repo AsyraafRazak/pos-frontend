@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { Wifi, WifiOff, Server, Clock, User, ChevronDown } from 'lucide-react'
+import { Wifi, WifiOff, Server, RefreshCw, Clock, User, ChevronDown } from 'lucide-react'
 import { useSessionStore } from '@/stores/useSessionStore'
 import type { ConnectionStatus } from '@/types/pos.types'
 import './Header.css'
@@ -8,22 +8,11 @@ const statusClass: Record<ConnectionStatus, string> = {
   online: 'status-badge status-badge--online',
   'edge-only': 'status-badge status-badge--edge-only',
   offline: 'status-badge status-badge--offline',
-}
-
-const statusIcon: Record<ConnectionStatus, React.ReactNode> = {
-  online: <Wifi size={13} />,
-  'edge-only': <Server size={13} />,
-  offline: <WifiOff size={13} />,
-}
-
-const statusLabel: Record<ConnectionStatus, string> = {
-  online: 'Online',
-  'edge-only': 'Edge Only',
-  offline: 'Offline',
+  syncing: 'status-badge status-badge--syncing',
 }
 
 export function Header() {
-  const { session, connectionStatus, currentTime, tickClock } = useSessionStore()
+  const { session, connectionStatus, pendingSyncCount, currentTime, tickClock } = useSessionStore()
 
   useEffect(() => {
     const timer = setInterval(tickClock, 1000)
@@ -43,6 +32,42 @@ export function Header() {
     day: 'numeric',
   })
 
+  function renderStatusBadge() {
+    if (connectionStatus === 'syncing') {
+      return (
+        <div className={statusClass.syncing} title="Syncing pending orders with backend">
+          <RefreshCw size={13} className="status-badge__spin" />
+          <span>Syncing{pendingSyncCount > 0 ? ` (${pendingSyncCount})` : ''}</span>
+        </div>
+      )
+    }
+
+    if (connectionStatus === 'online') {
+      return (
+        <div className={statusClass.online} title="Connected to POS backend API">
+          <Wifi size={13} />
+          <span>Online</span>
+        </div>
+      )
+    }
+
+    if (connectionStatus === 'edge-only') {
+      return (
+        <div className={statusClass['edge-only']} title="Connected to local edge server only">
+          <Server size={13} />
+          <span>Edge Only</span>
+        </div>
+      )
+    }
+
+    return (
+      <div className={statusClass.offline} title="Operating offline — transactions stored locally">
+        <WifiOff size={13} />
+        <span>{pendingSyncCount > 0 ? `Offline (${pendingSyncCount})` : 'Offline'}</span>
+      </div>
+    )
+  }
+
   return (
     <header className="header">
       {/* Left: Brand & Status */}
@@ -52,10 +77,7 @@ export function Header() {
           <span className="header__brand-name">CloudPOS</span>
           <span className="header__terminal-id">{session?.terminalId ?? '—'}</span>
         </div>
-        <div className={statusClass[connectionStatus]}>
-          {statusIcon[connectionStatus]}
-          <span>{statusLabel[connectionStatus]}</span>
-        </div>
+        {renderStatusBadge()}
       </div>
 
       {/* Center: Clock */}

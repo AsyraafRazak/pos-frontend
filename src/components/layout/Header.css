@@ -80,6 +80,24 @@
   color: #dc2626;
 }
 
+.status-badge--syncing {
+  background-color: #eff6ff;
+  color: #2563eb;
+}
+
+.status-badge__spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 /* --- Clock --- */
 .header__clock {
   display: flex;
