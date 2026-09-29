@@ -3,8 +3,7 @@ import { SearchBar } from './SearchBar'
 import { ProductCard } from './ProductCard'
 import { useCartStore } from '@/stores/useCartStore'
 import { useUIStore } from '@/stores/useUIStore'
-import { fetchCategories, fetchProducts } from '@/lib/api'
-import { adaptCategory, adaptProduct } from '@/lib/adapters'
+import { loadCatalog } from '@/lib/catalogCache'
 import { generateCartItemId } from '@/lib/utils'
 import type { Category, Product } from '@/types/pos.types'
 import './CatalogPanel.css'
@@ -20,23 +19,24 @@ export function CatalogPanel() {
   const addItem = useCartStore((s) => s.addItem)
   const openModal = useUIStore((s) => s.openModal)
 
-  // Load categories + products from the API on mount
+  // Phase 2: Cache-first catalog loading.
+  // Reads from IndexedDB immediately, then silently refreshes from API in background.
   useEffect(() => {
     let cancelled = false
     setLoading(true)
     setError(null)
 
-    Promise.all([
-      fetchCategories(true),
-      fetchProducts({ activeOnly: true }),
-    ])
-      .then(([catDtos, prodDtos]) => {
+    loadCatalog((fresh) => {
+      // Background API refresh completed — update the UI silently
+      if (!cancelled) {
+        setCategories(fresh.categories)
+        setProducts(fresh.products)
+      }
+    })
+      .then((initial) => {
         if (cancelled) return
-        setCategories([
-          { id: 'all', name: 'All' },
-          ...catDtos.map(adaptCategory),
-        ])
-        setProducts(prodDtos.map(adaptProduct))
+        setCategories(initial.categories)
+        setProducts(initial.products)
       })
       .catch((err: unknown) => {
         if (cancelled) return
