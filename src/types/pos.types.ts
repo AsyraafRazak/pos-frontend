@@ -7,6 +7,8 @@ export interface Product {
   category: string
   image?: string
   hasModifiers?: boolean
+  /** Parsed modifier groups from the API (modifiersJson). Replaces the static PRODUCT_MODIFIERS lookup. */
+  modifierGroups?: ModifierGroup[]
   stock?: number
   barcode?: string
 }
@@ -80,6 +82,8 @@ export interface CashierSession {
   terminalId: string
   openedAt: Date
   openingFloat: number
+  /** Real shift ID from the backend (int). Undefined until the shift is opened via API. */
+  shiftId?: number
 }
 
 export type ConnectionStatus = 'online' | 'edge-only' | 'offline'
