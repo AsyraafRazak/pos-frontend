@@ -21,14 +21,21 @@ const CMD = {
   PULSE_CASH_DRAWER: [ESC, 0x70, 0x00, 0x19, 0xfa], // ESC p 0 25 250 - Kick drawer (pin 2)
 }
 
-/** Total printable columns for standard 80mm thermal paper with Font A */
-const COLS_80MM = 48
+/** 
+ * Standard printable character width:
+ * - 42 columns: Default Epson TM-T82 80mm standard width (leaves clean margins)
+ * - 48 columns: Wide 80mm mode
+ * - 32 columns: 58mm compact mode
+ */
+export const DEFAULT_COLUMNS = 42
 
 export class EscPosBuilder {
   private buffer: number[] = []
   private encoder = new TextEncoder()
+  public readonly columns: number
 
-  constructor() {
+  constructor(columns: number = DEFAULT_COLUMNS) {
+    this.columns = columns
     this.add(CMD.INIT)
   }
 
@@ -77,17 +84,17 @@ export class EscPosBuilder {
     return this
   }
 
-  divider(char = '-', width = COLS_80MM): this {
+  divider(char = '-', width = this.columns): this {
     this.align('left').line(char.repeat(width))
     return this
   }
 
-  twoColumns(left: string, right: string, width = COLS_80MM): this {
+  twoColumns(left: string, right: string, width = this.columns): this {
     const spaceCount = width - left.length - right.length
     if (spaceCount <= 0) {
       // If text overflows, wrap or truncate left column
       const maxLeft = width - right.length - 1
-      const truncatedLeft = left.substring(0, maxLeft)
+      const truncatedLeft = left.substring(0, Math.max(0, maxLeft))
       this.line(truncatedLeft + ' ' + right)
     } else {
       this.line(left + ' '.repeat(spaceCount) + right)
@@ -100,8 +107,7 @@ export class EscPosBuilder {
    * @param mode 'partial' (leaves 1 small tab connected) or 'full'
    */
   cut(mode: 'partial' | 'full' = 'partial'): this {
-    // Epson TM-T82 cutter blade is ~15mm below the print head.
-    // Feed 4-5 lines so the bottom text fully clears the cutter before cutting.
+    // Feed 5 lines so the bottom text fully clears the cutter blade before cutting
     this.feed(5)
     this.add(mode === 'full' ? CMD.CUT_FULL : CMD.CUT_PARTIAL)
     return this
@@ -124,6 +130,7 @@ export interface ReceiptOptions {
   footerNote?: string
   kickDrawerOnCash?: boolean
   cutMode?: 'partial' | 'full'
+  columns?: number
 }
 
 /**
@@ -136,12 +143,13 @@ export function buildCashDrawerEscPos(): Uint8Array {
 }
 
 /**
- * Builds an 80mm ESC/POS binary payload for the Epson TM-T82II printer.
+ * Builds an ESC/POS binary payload for thermal printers (default 42 columns for TM-T82 80mm).
  */
 export function buildReceiptEscPos(
   order: CompletedOrder,
   options: ReceiptOptions = {}
 ): Uint8Array {
+  const columns = options.columns || DEFAULT_COLUMNS
   const storeName = options.storeName || 'CloudPOS'
   const storeAddress = options.storeAddress
   const storePhone = options.storePhone
@@ -149,7 +157,7 @@ export function buildReceiptEscPos(
   const kickDrawer = options.kickDrawerOnCash ?? (order.paymentMethod === 'cash')
   const cutMode = options.cutMode || 'partial'
 
-  const builder = new EscPosBuilder()
+  const builder = new EscPosBuilder(columns)
 
   // 1. Kick cash drawer if cash sale
   if (kickDrawer) {
@@ -193,7 +201,7 @@ export function buildReceiptEscPos(
   for (const item of order.items) {
     const qtyStr = `${item.quantity}x `
     const itemTotalStr = formatCurrency(item.lineTotal)
-    const availableWidth = COLS_80MM - itemTotalStr.length - 1
+    const availableWidth = columns - itemTotalStr.length - 1
 
     let nameStr = item.name
     if ((qtyStr + nameStr).length > availableWidth) {
