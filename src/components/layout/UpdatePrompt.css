@@ -1,0 +1,61 @@
+/* ============================================================
+   Update Prompt Banner
+   Appears at the top of the screen when a new SW version is ready
+   ============================================================ */
+
+.update-prompt {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.625rem 1.25rem;
+  background-color: #1e293b;
+  color: #f8fafc;
+  font-size: 0.875rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
+  animation: update-prompt-slide-in 0.2s ease-out;
+}
+
+@keyframes update-prompt-slide-in {
+  from { transform: translateY(-100%); opacity: 0; }
+  to   { transform: translateY(0);     opacity: 1; }
+}
+
+.update-prompt__icon {
+  flex-shrink: 0;
+  color: #38bdf8;
+}
+
+.update-prompt__text {
+  flex: 1;
+}
+
+.update-prompt__btn {
+  flex-shrink: 0;
+  padding: 0.3rem 0.875rem;
+  border: none;
+  border-radius: 0.375rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.15s;
+}
+
+.update-prompt__btn:hover {
+  opacity: 0.85;
+}
+
+.update-prompt__btn--primary {
+  background-color: #38bdf8;
+  color: #0f172a;
+}
+
+.update-prompt__btn--dismiss {
+  background-color: transparent;
+  color: #94a3b8;
+  border: 1px solid #334155;
+}
