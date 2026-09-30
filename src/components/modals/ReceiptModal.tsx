@@ -1,6 +1,8 @@
-import { X, Printer, ShoppingBag } from 'lucide-react'
+import { useState } from 'react'
+import { X, Printer, ShoppingBag, Loader2, CheckCircle2, AlertCircle } from 'lucide-react'
 import { useUIStore } from '@/stores/useUIStore'
 import { formatCurrency } from '@/lib/utils'
+import { printOrderReceipt, isWebSerialSupported } from '@/lib/serialPrinter'
 import './ReceiptModal.css'
 
 export function ReceiptModal() {
@@ -8,11 +10,66 @@ export function ReceiptModal() {
   const completedOrder = useUIStore((s) => s.completedOrder)
   const setCompletedOrder = useUIStore((s) => s.setCompletedOrder)
 
+  const [isPrinting, setIsPrinting] = useState(false)
+  const [printStatus, setPrintStatus] = useState<{
+    type: 'success' | 'error'
+    message: string
+  } | null>(null)
+
   if (!completedOrder) return null
 
   function handleNewSale() {
     setCompletedOrder(null)
     closeModal()
+  }
+
+  async function handlePrint() {
+    if (!completedOrder || isPrinting) return
+
+    setPrintStatus(null)
+
+    // Check if Web Serial is supported
+    if (!isWebSerialSupported()) {
+      // Fallback to standard browser print
+      window.print()
+      return
+    }
+
+    const orderToPrint = completedOrder
+    setIsPrinting(true)
+    try {
+      const result = await printOrderReceipt(orderToPrint, {
+        baudRate: 38400,
+        receiptOptions: {
+          storeName: 'CloudPOS',
+          kickDrawerOnCash: orderToPrint.paymentMethod === 'cash',
+        },
+      })
+
+      if (result.success) {
+        setPrintStatus({
+          type: 'success',
+          message: 'Receipt sent to printer!',
+        })
+      } else {
+        setPrintStatus({
+          type: 'error',
+          message: result.message || 'Could not print receipt.',
+        })
+      }
+    } catch (err: unknown) {
+      const error = err as Error
+      setPrintStatus({
+        type: 'error',
+        message: error.message || 'An unexpected error occurred while printing.',
+      })
+    } finally {
+      setIsPrinting(false)
+    }
+  }
+
+  function handleBrowserPrintFallback() {
+    window.print()
   }
 
   return (
@@ -26,8 +83,32 @@ export function ReceiptModal() {
           </button>
         </div>
 
+        {/* Status banner if print attempted */}
+        {printStatus && (
+          <div
+            className={`receipt__status-banner receipt__status-banner--${printStatus.type}`}
+          >
+            {printStatus.type === 'success' ? (
+              <CheckCircle2 size={16} />
+            ) : (
+              <AlertCircle size={16} />
+            )}
+            <div className="receipt__status-content">
+              <span>{printStatus.message}</span>
+              {printStatus.type === 'error' && (
+                <button
+                  className="receipt__status-fallback-btn"
+                  onClick={handleBrowserPrintFallback}
+                >
+                  Use Browser Print
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Receipt body */}
-        <div className="modal__body receipt-modal__body scrollbar-thin">
+        <div className="modal__body receipt-modal__body scrollbar-thin print-area">
           {/* Store header */}
           <div className="receipt__store">
             <div className="receipt__store-logo">POS</div>
@@ -91,10 +172,12 @@ export function ReceiptModal() {
                 <span>- {formatCurrency(completedOrder.discountAmount)}</span>
               </div>
             )}
-            <div className="receipt__total-row">
-              <span>VAT (12%)</span>
-              <span>{formatCurrency(completedOrder.tax)}</span>
-            </div>
+            {completedOrder.tax > 0 && (
+              <div className="receipt__total-row">
+                <span>VAT (12%)</span>
+                <span>{formatCurrency(completedOrder.tax)}</span>
+              </div>
+            )}
             <div className="receipt__total-row receipt__total-row--grand">
               <span>TOTAL</span>
               <span>{formatCurrency(completedOrder.total)}</span>
@@ -129,10 +212,20 @@ export function ReceiptModal() {
         <div className="modal__footer">
           <button
             className="btn btn--secondary"
-            onClick={() => console.log('Print receipt — connect to hardware in Phase 4')}
+            onClick={handlePrint}
+            disabled={isPrinting}
+            title={
+              isWebSerialSupported()
+                ? 'Print to Epson TM-T82II via Serial COM port'
+                : 'Print using browser print dialog'
+            }
           >
-            <Printer size={14} />
-            <span>Print</span>
+            {isPrinting ? (
+              <Loader2 size={14} className="animate-spin" />
+            ) : (
+              <Printer size={14} />
+            )}
+            <span>{isPrinting ? 'Printing...' : 'Print (COM1)'}</span>
           </button>
           <button className="btn btn--primary btn--full" onClick={handleNewSale}>
             <ShoppingBag size={14} />

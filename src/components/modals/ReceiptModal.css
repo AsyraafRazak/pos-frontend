@@ -6,6 +6,62 @@
 
 .receipt-modal__body { padding: 0; }
 
+/* --- Status Banner --- */
+.receipt__status-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px 16px;
+  font-size: 12px;
+  line-height: 1.4;
+  border-bottom: 1px solid transparent;
+}
+
+.receipt__status-banner--success {
+  background-color: #ecfdf5;
+  color: #065f46;
+  border-color: #a7f3d0;
+}
+
+.receipt__status-banner--error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border-color: #fecaca;
+}
+
+.receipt__status-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.receipt__status-fallback-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  color: #dc2626;
+  text-decoration: underline;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  text-align: left;
+}
+
+.receipt__status-fallback-btn:hover {
+  color: #991b1b;
+}
+
+/* Spinner Animation */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
 /* --- Store Header --- */
 .receipt__store {
   display: flex;
@@ -146,4 +202,48 @@
   font-size: 12px;
   color: #94a3b8;
   padding: 12px 20px 16px;
+}
+
+/* ============================================================
+   Media Print Fallback Rules
+   ============================================================ */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  .modal-overlay {
+    position: static !important;
+    background: none !important;
+    padding: 0 !important;
+  }
+
+  .receipt-modal {
+    box-shadow: none !important;
+    border: none !important;
+    width: 80mm !important;
+    max-width: 80mm !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .modal__header,
+  .modal__footer,
+  .receipt__status-banner {
+    display: none !important;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible !important;
+  }
+
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    margin: 0;
+    padding: 0;
+  }
 }
