@@ -16,14 +16,15 @@ const CMD = {
   SIZE_DOUBLE_HEIGHT: [GS, 0x21, 0x01],
   SIZE_DOUBLE_WIDTH: [GS, 0x21, 0x10],
   SIZE_DOUBLE: [GS, 0x21, 0x11], // GS ! 0x11 (2x width & 2x height)
-  CUT_PARTIAL: [GS, 0x56, 0x42, 0x03], // GS V 'B' 3 - Feed 3 lines & cut
+  CUT_PARTIAL: [GS, 0x56, 0x01], // GS V 1 - Epson TM-T82 standard partial cut
+  CUT_FULL: [GS, 0x56, 0x00], // GS V 0 - Epson TM-T82 standard full cut
   PULSE_CASH_DRAWER: [ESC, 0x70, 0x00, 0x19, 0xfa], // ESC p 0 25 250 - Kick drawer (pin 2)
 }
 
 /** Total printable columns for standard 80mm thermal paper with Font A */
 const COLS_80MM = 48
 
-class EscPosBuilder {
+export class EscPosBuilder {
   private buffer: number[] = []
   private encoder = new TextEncoder()
 
@@ -94,8 +95,15 @@ class EscPosBuilder {
     return this
   }
 
-  cut(): this {
-    this.add(CMD.CUT_PARTIAL)
+  /**
+   * Feeds the paper past the thermal head and triggers the auto-cutter.
+   * @param mode 'partial' (leaves 1 small tab connected) or 'full'
+   */
+  cut(mode: 'partial' | 'full' = 'partial'): this {
+    // Epson TM-T82 cutter blade is ~15mm below the print head.
+    // Feed 4-5 lines so the bottom text fully clears the cutter before cutting.
+    this.feed(5)
+    this.add(mode === 'full' ? CMD.CUT_FULL : CMD.CUT_PARTIAL)
     return this
   }
 
@@ -115,6 +123,16 @@ export interface ReceiptOptions {
   storePhone?: string
   footerNote?: string
   kickDrawerOnCash?: boolean
+  cutMode?: 'partial' | 'full'
+}
+
+/**
+ * Builds standalone command bytes to pulse open the cash drawer.
+ */
+export function buildCashDrawerEscPos(): Uint8Array {
+  const builder = new EscPosBuilder()
+  builder.kickDrawer()
+  return builder.build()
 }
 
 /**
@@ -129,10 +147,11 @@ export function buildReceiptEscPos(
   const storePhone = options.storePhone
   const footerNote = options.footerNote || 'Thank you for your purchase!'
   const kickDrawer = options.kickDrawerOnCash ?? (order.paymentMethod === 'cash')
+  const cutMode = options.cutMode || 'partial'
 
   const builder = new EscPosBuilder()
 
-  // 1. Kick cash drawer if applicable
+  // 1. Kick cash drawer if cash sale
   if (kickDrawer) {
     builder.kickDrawer()
   }
@@ -208,7 +227,7 @@ export function buildReceiptEscPos(
 
   builder.divider('=')
 
-  // Grand Total (Bold & slightly emphasized)
+  // Grand Total (Bold & emphasized)
   builder
     .bold(true)
     .twoColumns('TOTAL', formatCurrency(order.total))
@@ -228,14 +247,12 @@ export function buildReceiptEscPos(
 
   builder.divider('-')
 
-  // 8. Footer & Barcode/Order Number
+  // 8. Footer & Automatic Cut
   builder
     .align('center')
-    .feed(1)
     .line(footerNote)
     .line('Please retain this receipt.')
-    .feed(2)
-    .cut()
+    .cut(cutMode)
 
   return builder.build()
 }

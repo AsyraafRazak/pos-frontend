@@ -1,5 +1,5 @@
 import type { CompletedOrder } from '@/types/pos.types'
-import { buildReceiptEscPos, type ReceiptOptions } from './escpos'
+import { buildReceiptEscPos, buildCashDrawerEscPos, type ReceiptOptions } from './escpos'
 
 // Web Serial API Interface Definitions (for TypeScript compatibility)
 interface SerialPort {
@@ -43,39 +43,34 @@ export function isWebSerialSupported(): boolean {
 }
 
 /**
- * Connects to the Epson TM-T82II printer via Web Serial and prints the receipt.
+ * Obtains an authorized serial port (or requests user permission).
  */
-export async function printOrderReceipt(
-  order: CompletedOrder,
-  config: PrintConfig = {}
-): Promise<{ success: boolean; message?: string }> {
-  if (!isWebSerialSupported()) {
-    return {
-      success: false,
-      message:
-        'Web Serial API is not supported in this browser. Please use Google Chrome or Microsoft Edge on HTTPS / localhost.',
-    }
-  }
-
+async function getOrRequestPort(): Promise<SerialPort | null> {
+  if (!isWebSerialSupported()) return null
   const serial = navigator.serial!
+
+  const existingPorts = await serial.getPorts()
+  if (existingPorts.length > 0) {
+    return existingPorts[0]
+  }
+  return await serial.requestPort()
+}
+
+/**
+ * Sends a raw ESC/POS binary buffer to the serial printer.
+ */
+async function sendRawBytesToPrinter(
+  bytes: Uint8Array,
+  baudRate = DEFAULT_BAUD_RATE
+): Promise<{ success: boolean; message?: string }> {
   let port: SerialPort | null = null
 
   try {
-    // 1. Check if user already authorized a port previously
-    const existingPorts = await serial.getPorts()
-    if (existingPorts.length > 0) {
-      port = existingPorts[0]
-    } else {
-      // 2. Prompt user to select port (e.g. COM1)
-      port = await serial.requestPort()
-    }
-
+    port = await getOrRequestPort()
     if (!port) {
       return { success: false, message: 'No serial port selected.' }
     }
 
-    // 3. Open port with TM-T82II parameters
-    const baudRate = config.baudRate || DEFAULT_BAUD_RATE
     await port.open({
       baudRate,
       dataBits: 8,
@@ -89,30 +84,23 @@ export async function printOrderReceipt(
       return { success: false, message: 'Serial port is not writable.' }
     }
 
-    // 4. Generate 80mm ESC/POS binary data
-    const escposData = buildReceiptEscPos(order, config.receiptOptions)
-
-    // 5. Write binary data to printer stream
     const writer = port.writable.getWriter()
     try {
-      await writer.write(escposData)
+      await writer.write(bytes)
     } finally {
       writer.releaseLock()
     }
 
-    // 6. Close port gracefully to release hardware lock
     await port.close()
-
     return { success: true }
   } catch (err: unknown) {
-    console.error('Serial printing error:', err)
+    console.error('Serial communication error:', err)
 
-    // Clean up if port was left open
     if (port) {
       try {
         await port.close()
       } catch {
-        // Ignore close errors if already closed
+        // Ignore close error
       }
     }
 
@@ -132,7 +120,43 @@ export async function printOrderReceipt(
 
     return {
       success: false,
-      message: error.message || 'Failed to print receipt via serial port.',
+      message: error.message || 'Failed to communicate with printer via serial port.',
     }
   }
+}
+
+/**
+ * Connects to the Epson TM-T82II printer via Web Serial and prints the receipt (with auto-cut).
+ */
+export async function printOrderReceipt(
+  order: CompletedOrder,
+  config: PrintConfig = {}
+): Promise<{ success: boolean; message?: string }> {
+  if (!isWebSerialSupported()) {
+    return {
+      success: false,
+      message:
+        'Web Serial API is not supported in this browser. Please use Google Chrome or Microsoft Edge on HTTPS / localhost.',
+    }
+  }
+
+  const escposData = buildReceiptEscPos(order, config.receiptOptions)
+  return await sendRawBytesToPrinter(escposData, config.baudRate || DEFAULT_BAUD_RATE)
+}
+
+/**
+ * Pulses the cash drawer solenoid to pop it open standalone without printing a full receipt.
+ */
+export async function openCashDrawerViaSerial(
+  baudRate = DEFAULT_BAUD_RATE
+): Promise<{ success: boolean; message?: string }> {
+  if (!isWebSerialSupported()) {
+    return {
+      success: false,
+      message: 'Web Serial API is not supported in this browser.',
+    }
+  }
+
+  const drawerCommand = buildCashDrawerEscPos()
+  return await sendRawBytesToPrinter(drawerCommand, baudRate)
 }
