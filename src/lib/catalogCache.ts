@@ -71,7 +71,8 @@ async function seedFromMockData(): Promise<void> {
     categoryId: catNameToId[p.category.toLowerCase()] ?? 1,
     categoryName: p.category,
     barcode: p.barcode,
-    modifiersJson: undefined,
+    imageUrl: p.image,
+    modifiersJson: p.modifierGroups ? JSON.stringify(p.modifierGroups) : undefined,
   }))
 
   await persistCategories(catDtos)
