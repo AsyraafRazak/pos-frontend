@@ -16,8 +16,8 @@ const CMD = {
   SIZE_DOUBLE_HEIGHT: [GS, 0x21, 0x01],
   SIZE_DOUBLE_WIDTH: [GS, 0x21, 0x10],
   SIZE_DOUBLE: [GS, 0x21, 0x11], // GS ! 0x11 (2x width & 2x height)
-  CUT_PARTIAL: [GS, 0x56, 0x01], // GS V 1 - Epson TM-T82 standard partial cut
-  CUT_FULL: [GS, 0x56, 0x00], // GS V 0 - Epson TM-T82 standard full cut
+  CUT_PARTIAL: [GS, 0x56, 0x42, 0x00], // GS V 'B' 0 - Epson TM-T82 standard partial cut
+  CUT_FULL: [GS, 0x56, 0x41, 0x00], // GS V 'A' 0 - Epson TM-T82 standard full cut
   PULSE_CASH_DRAWER: [ESC, 0x70, 0x00, 0x19, 0xfa], // ESC p 0 25 250 - Kick drawer (pin 2)
 }
 
@@ -28,6 +28,21 @@ const CMD = {
  * - 32 columns: 58mm compact mode
  */
 export const DEFAULT_COLUMNS = 42
+
+/**
+ * Sanitizes Unicode characters into single-byte ASCII.
+ * Fixes issues where non-breaking spaces (\u00A0 from currency formatters)
+ * or special symbols print as random characters (like 'ta' or '?') on thermal printers.
+ */
+function cleanAscii(str: string): string {
+  return str
+    .replace(/\u00a0/g, ' ') // Non-breaking space -> regular space (Fixes 'RMta169.00')
+    .replace(/[\u2018\u2019]/g, "'") // Smart single quotes
+    .replace(/[\u201C\u201D]/g, '"') // Smart double quotes
+    .replace(/[\u2013\u2014]/g, '-') // En/em dash
+    .replace(/[\u00B7\u2022]/g, '-') // Middle dot / bullet
+    .replace(/[^\x00-\x7F]/g, '') // Strip remaining non-ASCII (emojis, etc.)
+}
 
 export class EscPosBuilder {
   private buffer: number[] = []
@@ -45,7 +60,8 @@ export class EscPosBuilder {
   }
 
   text(str: string): this {
-    const encoded = this.encoder.encode(str)
+    const cleaned = cleanAscii(str)
+    const encoded = this.encoder.encode(cleaned)
     for (let i = 0; i < encoded.length; i++) {
       this.buffer.push(encoded[i])
     }
@@ -90,14 +106,15 @@ export class EscPosBuilder {
   }
 
   twoColumns(left: string, right: string, width = this.columns): this {
-    const spaceCount = width - left.length - right.length
+    const cleanL = cleanAscii(left)
+    const cleanR = cleanAscii(right)
+    const spaceCount = width - cleanL.length - cleanR.length
     if (spaceCount <= 0) {
-      // If text overflows, wrap or truncate left column
-      const maxLeft = width - right.length - 1
-      const truncatedLeft = left.substring(0, Math.max(0, maxLeft))
-      this.line(truncatedLeft + ' ' + right)
+      const maxLeft = width - cleanR.length - 1
+      const truncatedLeft = cleanL.substring(0, Math.max(0, maxLeft))
+      this.line(truncatedLeft + ' ' + cleanR)
     } else {
-      this.line(left + ' '.repeat(spaceCount) + right)
+      this.line(cleanL + ' '.repeat(spaceCount) + cleanR)
     }
     return this
   }
@@ -107,7 +124,7 @@ export class EscPosBuilder {
    * @param mode 'partial' (leaves 1 small tab connected) or 'full'
    */
   cut(mode: 'partial' | 'full' = 'partial'): this {
-    // Feed 5 lines so the bottom text fully clears the cutter blade before cutting
+    // Feed 5 lines so the bottom text completely clears the cutter blade before cutting
     this.feed(5)
     this.add(mode === 'full' ? CMD.CUT_FULL : CMD.CUT_PARTIAL)
     return this
@@ -177,7 +194,7 @@ export function buildReceiptEscPos(
   if (storePhone) builder.line(`Tel: ${storePhone}`)
 
   builder
-    .line(`${order.terminalId || 'POS-01'} · Cashier: ${order.cashierName || 'Staff'}`)
+    .line(`${order.terminalId || 'POS-01'} - Cashier: ${order.cashierName || 'Staff'}`)
     .divider('=')
 
   // 3. Order Info
