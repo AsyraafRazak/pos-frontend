@@ -91,6 +91,9 @@ async function sendRawBytesToPrinter(
       writer.releaseLock()
     }
 
+    // Allow hardware UART buffer to finish transmitting final cut bytes over serial cable
+    await new Promise((resolve) => setTimeout(resolve, 350))
+
     await port.close()
     return { success: true }
   } catch (err: unknown) {
