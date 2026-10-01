@@ -88,18 +88,52 @@ export function fetchShift(shiftId: number): Promise<ShiftResponseDto> {
 
 // ─── Health / Ping ────────────────────────────────────────────────────────────
 
-export async function pingApi(timeoutMs = 3000): Promise<boolean> {
+export async function pingApi(timeoutMs = 2500): Promise<boolean> {
   try {
     const controller = new AbortController()
     const timer = setTimeout(() => controller.abort(), timeoutMs)
-    const res = await fetch(`${BASE}/categories?activeOnly=true`, {
+    // Add cache: 'no-store' and _t cache-buster so PWA Service Worker / HTTP cache won't serve a stale 200 OK
+    const res = await fetch(`${BASE}/categories?activeOnly=true&_t=${Date.now()}`, {
       method: 'GET',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+      },
+      cache: 'no-store',
       signal: controller.signal,
     })
     clearTimeout(timer)
-    return res.ok
+
+    if (!res.ok) return false
+
+    // Ensure it's genuine JSON from ASP.NET API, not an HTML error page or fallback
+    const contentType = res.headers.get('content-type')
+    return contentType !== null && contentType.includes('application/json')
   } catch {
     return false
   }
 }
+
+/** Check if the client has active WAN/Internet access (independent of local Edge server) */
+export async function checkInternetAccess(timeoutMs = 2500): Promise<boolean> {
+  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+    return false
+  }
+
+  try {
+    const controller = new AbortController()
+    const timer = setTimeout(() => controller.abort(), timeoutMs)
+    // Fast 204 no-content probe with no-cors to test WAN connectivity
+    await fetch('https://www.gstatic.com/generate_204', {
+      method: 'HEAD',
+      mode: 'no-cors',
+      cache: 'no-store',
+      signal: controller.signal,
+    })
+    clearTimeout(timer)
+    return true
+  } catch {
+    return false
+  }
+}
+
