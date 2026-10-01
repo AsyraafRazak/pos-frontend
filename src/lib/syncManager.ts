@@ -19,13 +19,14 @@
  */
 
 import { getDb } from './db'
-import { submitOrder, pingApi } from './api'
+import { submitOrder, pingApi, checkInternetAccess } from './api'
 import type { OutboxRecord, OutboxStatus } from './db'
 import type { CreateOrderRequest } from './api.types'
+import type { ConnectionStatus } from '@/types/pos.types'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type SyncStatus = 'online' | 'offline' | 'syncing'
+export type SyncStatus = ConnectionStatus
 
 type SyncStatusListener = (status: SyncStatus, pendingCount: number) => void
 
@@ -49,7 +50,7 @@ class SyncManager {
     // Immediate initial API check + outbox flush
     void this.checkApiStatus()
 
-    // Heartbeat every 10 seconds: probe the actual API server
+    // Heartbeat every 10 seconds: probe the actual API server & internet status
     this._heartbeatTimer = setInterval(() => void this.checkApiStatus(), 10_000)
   }
 
@@ -78,28 +79,33 @@ class SyncManager {
     this._listeners.forEach((fn) => fn(status, pendingCount))
   }
 
-  /** Actively pings the backend API to determine real online/offline status */
+  /**
+   * Actively pings the local backend API and public internet to determine:
+   *  - 'online': Edge API alive + Internet/Cloud reachable
+   *  - 'edge-only': Edge API alive + NO Internet
+   *  - 'offline': Edge API is unreachable (pure IndexedDB fallback)
+   */
   async checkApiStatus(): Promise<boolean> {
-    if (!navigator.onLine) {
-      const pending = await this._countByStatus('PENDING')
-      this._emit('offline', pending)
-      return false
-    }
-
     const isApiAlive = await pingApi(3000)
     const pending = await this._countByStatus('PENDING')
 
-    if (isApiAlive) {
-      this._emit('online', pending)
-      // Flush outbox if there are pending orders
-      if (pending > 0) {
-        void this._flushOutbox()
-      }
-      return true
-    } else {
+    if (!isApiAlive) {
       this._emit('offline', pending)
       return false
     }
+
+    // Edge API is reachable! Now check if we have WAN/Internet access.
+    const hasInternet = await checkInternetAccess(2500)
+    const resolvedStatus: SyncStatus = hasInternet ? 'online' : 'edge-only'
+
+    this._emit(resolvedStatus, pending)
+
+    // Flush outbox if there are pending orders to send to the local Edge API
+    if (pending > 0) {
+      void this._flushOutbox()
+    }
+
+    return true
   }
 
   // ─── Event handlers ────────────────────────────────────────────────────────
@@ -109,7 +115,8 @@ class SyncManager {
   }
 
   private _handleOffline = () => {
-    void this.pendingCount().then((pending) => this._emit('offline', pending))
+    // When browser disconnects from network, re-evaluate status
+    void this.checkApiStatus()
   }
 
   // ─── Outbox ────────────────────────────────────────────────────────────────
@@ -135,8 +142,8 @@ class SyncManager {
     }
     await db.put('ordersOutbox', record)
 
-    // Try to flush immediately if online
-    if (navigator.onLine) {
+    // If connected to Edge API (online or edge-only), flush immediately
+    if (this._status === 'online' || this._status === 'edge-only') {
       void this._flushOutbox()
     } else {
       const pending = await this._countByStatus('PENDING')
@@ -161,7 +168,7 @@ class SyncManager {
   // ─── Flush ─────────────────────────────────────────────────────────────────
 
   private async _flushOutbox(): Promise<void> {
-    if (!navigator.onLine) return
+    if (this._status === 'offline') return
 
     const pending = await this.getOutboxRecords('PENDING')
     if (pending.length === 0) return
@@ -172,8 +179,8 @@ class SyncManager {
       await this._syncRecord(record)
     }
 
-    const remaining = await this._countByStatus('PENDING')
-    this._emit(navigator.onLine ? 'online' : 'offline', remaining)
+    // Refresh actual status and remaining pending count
+    await this.checkApiStatus()
   }
 
   private async _syncRecord(record: OutboxRecord): Promise<void> {
