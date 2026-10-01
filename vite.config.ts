@@ -53,17 +53,18 @@ export default defineConfig({
         runtimeCaching: [
           {
             // Local Edge API: network-first, fall back to cache (offline resilience)
-            urlPattern: /^https?:\/\/localhost:5009\/api\/.*/i,
+            // Exclude ping / health check queries containing _t to prevent fake 200 responses
+            urlPattern: ({ url }) => url.pathname.startsWith('/api/') && !url.searchParams.has('_t'),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'pos-api-cache',
-              networkTimeoutSeconds: 5,
+              networkTimeoutSeconds: 3,
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 60 * 60 * 24, // 24 hours
               },
               cacheableResponse: {
-                statuses: [0, 200],
+                statuses: [200],
               },
             },
           },
