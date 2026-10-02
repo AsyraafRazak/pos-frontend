@@ -26,7 +26,18 @@ export function PaymentModal() {
   const openModal = useUIStore((s) => s.openModal)
   const setCompletedOrder = useUIStore((s) => s.setCompletedOrder)
 
-  const { items, subtotal, discountAmount, tax, total, discount } = useCartStore(
+  const {
+    items,
+    subtotal,
+    discountAmount,
+    tax,
+    total,
+    discount,
+    orderType,
+    selectedTableId,
+    selectedTableNumber,
+    customerName,
+  } = useCartStore(
     useShallow((s) => ({
       items: s.items,
       subtotal: s.subtotal,
@@ -34,6 +45,10 @@ export function PaymentModal() {
       tax: s.tax,
       total: s.total,
       discount: s.discount,
+      orderType: s.orderType,
+      selectedTableId: s.selectedTableId,
+      selectedTableNumber: s.selectedTableNumber,
+      customerName: s.customerName,
     })),
   )
   const clearCart = useCartStore((s) => s.clearCart)
@@ -80,6 +95,8 @@ export function PaymentModal() {
       orderNumber: orderNumRef.current,
       cashierName: session?.cashierName ?? 'Unknown',
       terminalId: session?.terminalId ?? 'POS-01',
+      tableNumber: selectedTableNumber,
+      orderType: orderType,
       items: [...items],
       subtotal,
       discountAmount,
@@ -95,14 +112,19 @@ export function PaymentModal() {
     clearCart()
     openModal('receipt')
 
-    // 2. Enqueue to IndexedDB outbox — syncs to backend when online (Phase 2)
+    // 2. Enqueue to IndexedDB outbox / sync to backend
     const orderPayload = {
       orderNumber: orderNumRef.current,
-      type: 'Takeaway' as const,
+      tableId: selectedTableId,
+      tableNumber: selectedTableNumber,
+      type: orderType as any,
+      status: 'Preparing' as const,
+      paymentStatus: 'Completed' as const,
       subtotal,
       discountTotal: discountAmount,
       taxTotal: tax,
       grandTotal: total,
+      customerName: customerName ?? (orderType === 'DineIn' ? `Table ${selectedTableNumber ?? 'Walk-in'}` : 'Takeaway'),
       cashierId: session?.id ?? 'cashier-1',
       cashierName: session?.cashierName ?? 'Cashier',
       shiftId: session?.shiftId,
