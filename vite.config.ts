@@ -102,12 +102,6 @@ export default defineConfig({
         target: 'http://localhost:5009',
         changeOrigin: true,
       },
-      // Forward SignalR WebSocket traffic
-      '/hubs': {
-        target: 'http://localhost:5009',
-        ws: true,
-        changeOrigin: true,
-      },
     },
   },
 })
