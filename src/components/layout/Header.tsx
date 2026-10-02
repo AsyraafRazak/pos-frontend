@@ -1,5 +1,18 @@
 import { useEffect } from 'react'
-import { Wifi, WifiOff, Server, RefreshCw, Clock, User, ChevronDown } from 'lucide-react'
+import { NavLink } from 'react-router-dom'
+import {
+  Wifi,
+  WifiOff,
+  Server,
+  RefreshCw,
+  Clock,
+  User,
+  ChevronDown,
+  ShoppingCart,
+  UtensilsCrossed,
+  ChefHat,
+  Settings,
+} from 'lucide-react'
 import { useSessionStore } from '@/stores/useSessionStore'
 import type { ConnectionStatus } from '@/types/pos.types'
 import './Header.css'
@@ -80,12 +93,33 @@ export function Header() {
         {renderStatusBadge()}
       </div>
 
-      {/* Center: Clock */}
-      <div className="header__clock">
-        <Clock size={14} className="header__clock-icon" />
-        <div>
-          <div className="header__clock-time">{formattedTime}</div>
-          <div className="header__clock-date">{formattedDate}</div>
+      {/* Center: Nav links & Clock */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <nav className="header__nav">
+          <NavLink to="/" className={({ isActive }) => `header__nav-link ${isActive ? 'active' : ''}`} end>
+            <ShoppingCart size={14} />
+            <span>Register</span>
+          </NavLink>
+          <NavLink to="/tables" className={({ isActive }) => `header__nav-link ${isActive ? 'active' : ''}`}>
+            <UtensilsCrossed size={14} />
+            <span>Tables</span>
+          </NavLink>
+          <NavLink to="/kds" className={({ isActive }) => `header__nav-link ${isActive ? 'active' : ''}`}>
+            <ChefHat size={14} />
+            <span>KDS</span>
+          </NavLink>
+          <NavLink to="/admin" className={({ isActive }) => `header__nav-link ${isActive ? 'active' : ''}`}>
+            <Settings size={14} />
+            <span>Admin</span>
+          </NavLink>
+        </nav>
+
+        <div className="header__clock">
+          <Clock size={14} className="header__clock-icon" />
+          <div>
+            <div className="header__clock-time">{formattedTime}</div>
+            <div className="header__clock-date">{formattedDate}</div>
+          </div>
         </div>
       </div>
 

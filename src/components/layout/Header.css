@@ -98,6 +98,40 @@
   }
 }
 
+/* --- Nav Links --- */
+.header__nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: #f1f5f9;
+  padding: 4px;
+  border-radius: 10px;
+}
+
+.header__nav-link {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #64748b;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.header__nav-link:hover {
+  color: #0f172a;
+  background: #e2e8f0;
+}
+
+.header__nav-link.active {
+  background: #ffffff;
+  color: #4f46e5;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
 /* --- Clock --- */
 .header__clock {
   display: flex;
