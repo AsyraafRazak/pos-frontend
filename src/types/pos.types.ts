@@ -88,11 +88,65 @@ export interface CashierSession {
 
 export type ConnectionStatus = 'online' | 'edge-only' | 'offline' | 'syncing'
 
+export type OrderType = 'DineIn' | 'Takeaway' | 'Delivery'
+export type OrderStatus = 'Pending' | 'Preparing' | 'Ready' | 'Completed' | 'Cancelled' | 'Parked'
+export type PaymentStatus = 'Pending' | 'Completed' | 'Refunded' | 'Failed'
+export type TableStatus = 'Available' | 'Occupied' | 'Reserved' | 'BillRequested'
+
+export interface RestaurantTable {
+  id: number
+  tableNumber: string
+  zone: string
+  capacity: number
+  status: TableStatus
+  currentOrderId?: number
+  currentOrderNumber?: string
+  currentOrderTotal?: number
+  currentOrderTime?: string
+  currentOrderItemCount?: number
+}
+
+export interface KdsOrderItem {
+  id: number
+  productId?: number
+  productName: string
+  unitPrice: number
+  quantity: number
+  discountAmount: number
+  totalPrice: number
+  selectedModifiersJson?: string
+  notes?: string
+}
+
+export interface KdsOrder {
+  id: number
+  orderNumber: string
+  tableId?: number
+  tableNumber?: string
+  type: OrderType
+  status: OrderStatus
+  paymentStatus: PaymentStatus
+  subtotal: number
+  discountTotal: number
+  taxTotal: number
+  grandTotal: number
+  customerName?: string
+  notes?: string
+  cashierName: string
+  createdAt: string
+  sentToKitchenAt?: string
+  readyAt?: string
+  completedAt?: string
+  items: KdsOrderItem[]
+}
+
 export interface CompletedOrder {
   id: string
   orderNumber: string
   cashierName: string
   terminalId: string
+  tableNumber?: string
+  orderType: OrderType
   items: CartItem[]
   subtotal: number
   discountAmount: number
